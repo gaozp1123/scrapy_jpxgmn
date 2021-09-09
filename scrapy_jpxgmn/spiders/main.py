@@ -9,14 +9,14 @@ class downloadspider(Spider):
 
     def parse(self, response):
         # organization = response.xpath('//div[@class="sitenav"]/ul/li[2]/ul/li/a/@href').getall()
-        yield from response.follow_all(xpath='//div[@class="sitenav"]/ul/li[2]/ul/li/a', dont_filter=True,callback=self.parse_photos_page)
+        yield from response.follow_all(xpath='//div[@class="sitenav"]/ul/li[2]/ul/li/a', dont_filter=True, callback=self.parse_photos_page)
 
     def parse_photos_page(self, response):
-        yield from response.follow_all(xpath='//li[@class="related_box"]/a', callback=self.parse_photos)
+        yield from response.follow_all(xpath='//li[@class="related_box"]/a', dont_filter=True, callback=self.parse_photos)
         next = response.xpath(
             '//div[@class="pagination"]//a[text()="下一页"]/@href').get()
         if next is not None:
-            yield response.follow(next,dont_filter=True,callback=self.parse_photos_page)
+            yield response.follow(next, dont_filter=True, callback=self.parse_photos_page)
 
     def parse_photos(self, response):
         item = photoDataItem()
@@ -28,8 +28,9 @@ class downloadspider(Spider):
         item['organization'] = response.xpath(
             '//div[@class="toptip"]/a[2]/text()').get()
         item['photos_desc'] = response.css(
-            '.article-meta').xpath('./span[@class="item item-5"]/text()').getall()[1]
-        pages = response.xpath('//div[@class="pagination"][1]/ul/a/@href')[1:-1]
+            '.article-meta').xpath('./span[@class="item item-5"]/text()').getall()[-1]
+        pages = response.xpath(
+            '//div[@class="pagination"][1]/ul/a/@href')[1:-1]
         item['pages_nums'] = len(pages) + 1
         for page in pages:
             yield response.follow(page, callback=self.parse_nextpage, meta=item)
@@ -39,7 +40,7 @@ class downloadspider(Spider):
         for url in photo_urls:
             photo_url = response.urljoin(url)
             item['img_url'] = photo_url
-            yield Request(photo_url, callback=self.parse_photo, meta=item)
+            yield Request(photo_url, callback=self.parse_photo, dont_filter=True, meta=item)
 
     def parse_nextpage(self, response):
         item = response.meta
