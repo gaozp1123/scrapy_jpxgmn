@@ -52,8 +52,11 @@ class photoData2MongodbPipeline:
         self.client.close()
 
     def process_item(self, item, spider):
+        insert_data = dict(item)
+        insert_data['process'] = 0
+        insert_data['local'] = 1
         try:
-            self.collection.insert_one(dict(item))
+            self.collection.insert_one(insert_data)
         except Exception as e:
             print(e)
         return item
